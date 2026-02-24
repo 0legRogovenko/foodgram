@@ -6,14 +6,8 @@ from django.core.validators import MinValueValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import (
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    Subscription,
-    Tag,
-    User,
-)
+from .models import (Ingredient, Recipe, RecipeIngredient, Subscription, Tag,
+                     User)
 
 
 class Base64ImageField(serializers.ImageField):

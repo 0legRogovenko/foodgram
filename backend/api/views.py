@@ -1,35 +1,19 @@
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import RecipeFilter
-from .models import (
-    Ingredient,
-    Recipe,
-    Subscription,
-    Tag,
-    User,
-)
+from .models import Ingredient, Recipe, Subscription, Tag, User
 from .pagination import LimitPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (
-    AvatarSerializer,
-    IngredientSerializer,
-    RecipeCreateSerializer,
-    RecipeReadSerializer,
-    SetPasswordSerializer,
-    SubscriptionSerializer,
-    TagSerializer,
-    UserCreateSerializer,
-    UserSerializer,
-)
+from .serializers import (AvatarSerializer, IngredientSerializer,
+                          RecipeCreateSerializer, RecipeReadSerializer,
+                          SetPasswordSerializer, SubscriptionSerializer,
+                          TagSerializer, UserCreateSerializer, UserSerializer)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
