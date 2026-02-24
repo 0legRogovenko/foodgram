@@ -164,6 +164,15 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: "docker-compose.production.yml"
           target: "/home/${{ secrets.USER }}/foodgram"
+      - name: Copy frontend build to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          source: "frontend/build/"
+          target: "/var/www/foodgram"
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
