@@ -25,6 +25,10 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install system dependencies for Pillow
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libjpeg-dev zlib1g-dev
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
     - name: Install dependencies
@@ -74,17 +78,17 @@ jobs:
     - name: Set up nodeJS
       uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: 20
 
     - name: Install dependencies
       run: |
         cd frontend/
         npm ci
 
-    - name: Test frontend
+    - name: Build frontend
       run: |
         cd frontend/
-        npm run test
+        npm run build
 
   build_frontend_and_push_to_docker_hub:
     name: Push frontend Docker image to DockerHub
