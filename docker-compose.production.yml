@@ -25,7 +25,6 @@ services:
 
   frontend:
     container_name: foodgram-frontend
-    image: 0legrogovenko/foodgram_frontend
     env_file: .env
     restart: always
     volumes:
