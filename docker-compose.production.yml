@@ -29,7 +29,7 @@ services:
     env_file: .env
     restart: always
     volumes:
-      - static_volume:/backend_static
+      - static_volume://app/collected_static
       - media_volume:/media
     ports:
       - "9091:80"
@@ -42,7 +42,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - static_volume:/backend_static/
+      - static_volume://app/collected_static
       - media_volume:/media
     ports:
       - "9090:80"
