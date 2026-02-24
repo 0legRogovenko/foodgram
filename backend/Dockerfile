@@ -9,4 +9,6 @@ RUN pip install --upgrade pip && \
 
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram.wsgi"]
+RUN mkdir -p /backend_static
+
+CMD sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 foodgram.wsgi"

@@ -40,4 +40,4 @@ services:
       - static_volume:/staticfiles/
       - media_volume:/media
     ports:
-      - "80:80"
+      - "9090:80"
