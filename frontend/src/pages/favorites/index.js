@@ -48,7 +48,7 @@ const Favorites = ({ updateOrders }) => {
         <title>Избранное</title>
         <meta name="description" content="Фудграм - Избранное" />
         <meta property="og:title" content="Избранное" />
-      </MetaTags>
+      </Helmet>
       <div className={styles.title}>
         <Title title='Избранное' />
         <CheckboxGroup
