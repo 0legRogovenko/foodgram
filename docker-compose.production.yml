@@ -20,15 +20,16 @@ services:
     depends_on:
       - db
     volumes:
-      - static_volume:/backend_static
+      - static_volume:/app/collected_static
       - media_volume:/media
 
   frontend:
     container_name: foodgram-frontend
+    image: 0legrogovenko/foodgram_frontend
     env_file: .env
     restart: always
     volumes:
-      - static_volume://app/collected_static
+      - static_volume:/app/collected_static
       - media_volume:/media
     ports:
       - "9091:80"
@@ -41,7 +42,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - static_volume://app/collected_static
+      - static_volume:/app/collected_static
       - media_volume:/media
     ports:
       - "9090:80"
