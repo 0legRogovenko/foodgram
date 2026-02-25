@@ -155,14 +155,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Copy docker-compose.yml via ssh
+      - name: Copy docker-compose.yml and data via ssh
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "docker-compose.production.yml"
+          source: "docker-compose.production.yml,data/"
           target: "/home/${{ secrets.USER }}/foodgram"
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
@@ -178,6 +178,7 @@ jobs:
             sudo docker compose -f docker-compose.production.yml up -d
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py load_ingredients
 
   send_message:
     runs-on: ubuntu-latest
