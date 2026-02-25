@@ -1,6 +1,10 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
@@ -9,6 +13,8 @@ RUN pip install --upgrade pip && \
 
 COPY . .
 
-RUN mkdir -p /backend_static
+RUN mkdir -p /app/collected_static
 
-CMD sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 foodgram.wsgi"
+RUN python manage.py collectstatic --noinput
+
+CMD sh -c "python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 foodgram.wsgi"

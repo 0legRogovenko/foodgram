@@ -9,6 +9,11 @@ services:
     image: postgres:13.10
     env_file: .env
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - pg_data_production:/var/lib/postgresql/data
 
@@ -18,7 +23,8 @@ services:
     env_file: .env
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - static_volume:/app/collected_static
       - media_volume:/media
@@ -40,7 +46,8 @@ services:
     env_file: .env
     restart: always
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     volumes:
       - static_volume:/app/collected_static
       - media_volume:/media
