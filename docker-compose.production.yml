@@ -18,7 +18,7 @@ services:
     env_file: .env
     restart: always
     depends_on:
-      db:
+      - db
     volumes:
       - static_volume:/app/collected_static
       - media_volume:/media
@@ -26,27 +26,22 @@ services:
   frontend:
     container_name: foodgram-frontend
     image: 0legrogovenko/foodgram_frontend
-    env_file: .env
     restart: always
-    volumes:
-      - static_volume:/app/collected_static
-      - media_volume:/media
-    ports:
-      - "9091:80"
+    expose:
+      - 80
 
   gateway:
     container_name: foodgram-gateway
     image: 0legrogovenko/foodgram_gateway
-    env_file: .env
     restart: always
     depends_on:
-      backend:
-        condition: service_started
-    volumes:
-      - static_volume:/app/collected_static
-      - media_volume:/media
+      - backend
+      - frontend
     ports:
-      - "9090:80"
+      - "80:80"
+    volumes:
+      - static_volume:/static
+      - media_volume:/media
 
 networks:
   default:
