@@ -26,23 +26,22 @@ services:
   frontend:
     container_name: foodgram-frontend
     image: 0legrogovenko/foodgram_frontend
-    restart: always
-    expose:
-      - 80
-
+    command: cp -r /app/build/. /app/collected_static
+    ports:
+      - 9091:80
+    volumes:
+      - static_volume:/app/collected_static
+      - media_volume:/media
   gateway:
     container_name: foodgram-gateway
     image: 0legrogovenko/foodgram_gateway
     restart: always
+    env_file:
+      - .env
     depends_on:
       - backend
-      - frontend
     ports:
-      - "80:80"
+      - 9090:80
     volumes:
       - static_volume:/static
       - media_volume:/media
-
-networks:
-  default:
-    name: foodgram-network
