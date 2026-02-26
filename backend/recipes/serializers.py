@@ -237,7 +237,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 raise ValidationError(
                     f'Ингредиенты должны быть уникальными. '
                     f'Повторяющиеся ингредиенты: '
-                    f'{', '.join(str(d) for d in duplicates)}'
+                    f'{", ".join(str(d) for d in duplicates)}'
                 )
 
         if tags is not None:
@@ -252,7 +252,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 raise ValidationError(
                     f'Теги должны быть уникальными. '
                     f'Повторяющиеся теги: '
-                    f'{', '.join(str(d) for d in duplicates)}'
+                    f'{", ".join(str(d) for d in duplicates)}'
                 )
 
         return attrs
