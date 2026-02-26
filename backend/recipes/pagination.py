@@ -1,9 +1,3 @@
-"""
-Классы пагинации для API.
-
-Содержит конфигурацию постраничного деления результатов API запросов.
-"""
-
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -15,4 +9,5 @@ class LimitPageNumberPagination(PageNumberPagination):
     количества элементов на странице.
     """
 
+    page_size = 6
     page_size_query_param = 'limit'

@@ -1,0 +1,11 @@
+Список покупок создан: {{ created_at }}
+
+ПРОДУКТЫ ДЛЯ ПРИГОТОВЛЕНИЯ ({{ products|length }} шт.):
+{% for product in products %}
+{{ forloop.counter }}. {{ product }}
+{% endfor %}
+
+РЕЦЕПТЫ ДЛЯ ПРИГОТОВЛЕНИЯ ({{ recipes|length }} шт.):
+{% for recipe_name, author in recipes %}
+• {{ recipe_name }} (автор: @{{ author }})
+{% endfor %}

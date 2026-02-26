@@ -7,13 +7,16 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'recipes.User'
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key')
 
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(', ')
+ALLOWED_HOSTS = [
+    host.strip() for host in os.getenv('ALLOWED_HOSTS', '*').split(',')
+    if host.strip()
+]
 
 
 INSTALLED_APPS = [
@@ -27,7 +30,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
-    'api.apps.ApiConfig',
+    'recipes.apps.RecipesConfig',
 ]
 
 MIDDLEWARE = [
@@ -132,8 +135,8 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': False,
     'SERIALIZERS': {
-        'user_create': 'api.serializers.UserCreateSerializer',
-        'user': 'api.serializers.UserSerializer',
-        'current_user': 'api.serializers.UserSerializer',
+        'user_create': 'djoser.serializers.UserCreateSerializer',
+        'user': 'recipes.serializers.UserSerializer',
+        'current_user': 'recipes.serializers.UserSerializer',
     },
 }

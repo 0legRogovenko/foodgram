@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10"]
     services:
       postgres:
         image: postgres:13.10
@@ -173,13 +173,14 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd foodgram
+            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml down
             sudo docker compose -f docker-compose.production.yml up -d
             sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py collectstatic --noinput
+            sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py load_tags
             sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py load_ingredients
-            sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py load_test_data
 
   send_message:
     runs-on: ubuntu-latest
