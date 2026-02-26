@@ -339,7 +339,7 @@ class Migration(migrations.Migration):
                         name='unique_subscription'
                     ),
                     models.CheckConstraint(
-                        condition=~models.Q(user=models.F('author')),
+                        check=~models.Q(user=models.F('author')),
                         name='prevent_self_subscription'
                     ),
                 ],
@@ -432,7 +432,7 @@ class Migration(migrations.Migration):
                         name='unique_recipe_ingredient'
                     ),
                     models.CheckConstraint(
-                        condition=models.Q(amount__gt=0),
+                        check=models.Q(amount__gt=0),
                         name='positive_amount'
                     ),
                 ],
