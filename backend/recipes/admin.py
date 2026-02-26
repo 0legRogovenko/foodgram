@@ -2,9 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 
-from .filters import (CookingTimeFilter, HasInRecipesFilter,
-                      HasRecipesFilter, HasSubscribersFilter,
-                      HasSubscriptionsFilter)
+from .filters import (CookingTimeFilter, HasInRecipesFilter, HasRecipesFilter,
+                      HasSubscribersFilter, HasSubscriptionsFilter)
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag, User)
 

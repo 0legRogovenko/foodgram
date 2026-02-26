@@ -14,11 +14,10 @@ from .filters import RecipeFilter
 from .models import Ingredient, Recipe, Subscription, Tag, User
 from .pagination import LimitPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (
-    IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer,
-    ShortRecipeSerializer, TagSerializer, UserSerializer,
-    UserWithRecipesSerializer
-)
+from .serializers import (IngredientSerializer, RecipeReadSerializer,
+                          RecipeWriteSerializer, ShortRecipeSerializer,
+                          TagSerializer, UserSerializer,
+                          UserWithRecipesSerializer)
 from .utils import format_shopping_list
 
 

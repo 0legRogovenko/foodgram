@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from .constants import MIN_COOKING_TIME, MIN_AMOUNT
+from .constants import MIN_AMOUNT, MIN_COOKING_TIME
 
 
 class User(AbstractUser):

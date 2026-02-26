@@ -2,9 +2,9 @@ from drf_extra_fields.fields import Base64ImageField as DRFBase64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from .constants import MIN_AMOUNT, MIN_COOKING_TIME
 from .models import (Ingredient, Recipe, RecipeIngredient, Subscription, Tag,
                      User)
-from .constants import MIN_COOKING_TIME, MIN_AMOUNT
 
 
 class UsersBaseSerializer(serializers.ModelSerializer):
