@@ -17,4 +17,4 @@ RUN mkdir -p /app/collected_static
 
 RUN python manage.py collectstatic --noinput
 
-CMD sh -c "python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 foodgram.wsgi"
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram.wsgi"]
