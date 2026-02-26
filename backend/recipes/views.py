@@ -113,6 +113,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     permission_classes = [AllowAny]
     http_method_names = ['get']
+    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -122,6 +123,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['^name']
     http_method_names = ['get']
+    pagination_class = None
 
 
 class UserViewSet(DjoserUserViewSet):
