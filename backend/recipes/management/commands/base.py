@@ -24,19 +24,19 @@ class BaseImportCommand(BaseCommand):
         try:
             with open(options['file'], 'r', encoding='utf-8') as f:
                 data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            self.stdout.write(self.style.ERROR(f'Ошибка: {e}'))
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(
+                f'Ошибка при загрузке {options["file"]}: {e}')
+            )
             return
 
-        objects = (self.model(**item) for item in data)
         created = self.model.objects.bulk_create(
-            objects,
+            (self.model(**item) for item in data),
             ignore_conflicts=True
         )
-
         self.stdout.write(
             self.style.SUCCESS(
-                f'Загружено: {len(created)}\n'
-                f'Всего в БД: {self.model.objects.count()}'
+                f'Загружено из {options["file"]}: {len(created)}'
             )
         )

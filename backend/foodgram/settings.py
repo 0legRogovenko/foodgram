@@ -13,10 +13,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key')
 
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = [
-    host.strip() for host in os.getenv('ALLOWED_HOSTS', '*').split(',')
-    if host.strip()
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(', ')
 
 
 INSTALLED_APPS = [
@@ -31,6 +28,7 @@ INSTALLED_APPS = [
     'django_filters',
     'djoser',
     'recipes.apps.RecipesConfig',
+    'api.apps.ApiConfig'
 ]
 
 MIDDLEWARE = [
@@ -136,7 +134,7 @@ DJOSER = {
     'USER_CREATE_PASSWORD_RETYPE': False,
     'SERIALIZERS': {
         'user_create': 'djoser.serializers.UserCreateSerializer',
-        'user': 'recipes.serializers.UserSerializer',
-        'current_user': 'recipes.serializers.UserSerializer',
+        'user': 'api.serializers.UsersBaseSerializer',
+        'current_user': 'api.serializers.UsersBaseSerializer',
     },
 }

@@ -1,42 +1,40 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.utils.html import format_html
+from django.utils.html import format_html_join
+from django.utils.safestring import mark_safe
 
-from .filters import (CookingTimeFilter, HasInRecipesFilter, HasRecipesFilter,
-                      HasSubscribersFilter, HasSubscriptionsFilter)
+from .filters import (CookingTimeFilter, HasInRecipesFilter,
+                      HasRecipesFilter, HasSubscribersFilter,
+                      HasSubscriptionsFilter)
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag, User)
 
 
+class BaseTagIngredientAdmin(admin.ModelAdmin):
+    """"""
+    @admin.display(description='Рецептов')
+    def recipes_count(self, obj):
+        """Количество рецептов с этим тегом или продуктом"""
+        return obj.recipes.count()
+
+
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(BaseTagIngredientAdmin):
     """Страничка управления тегами в админке."""
 
     list_display = ['id', 'name', 'slug', 'recipes_count']
     search_fields = ['name', 'slug']
     ordering = ['name']
 
-    def recipes_count(self, obj):
-        """Количество рецептов с этим тегом."""
-        return obj.recipes.count()
-
-    recipes_count.short_description = 'Рецептов'
-
 
 @admin.register(Ingredient)
-class IngredientAdmin(admin.ModelAdmin):
+class IngredientAdmin(BaseTagIngredientAdmin):
     """Страничка управления продуктами в админке."""
 
     list_display = ['id', 'name', 'measurement_unit', 'recipes_count']
     list_filter = ['measurement_unit', HasInRecipesFilter]
     search_fields = ['name', 'measurement_unit', 'recipes__name']
     ordering = ['name', 'measurement_unit']
-
-    def recipes_count(self, obj):
-        """Количество рецептов с этим продуктом."""
-        return obj.recipes.count()
-
-    recipes_count.short_description = 'Рецептов'
 
 
 @admin.register(Recipe)
@@ -52,50 +50,43 @@ class RecipeAdmin(admin.ModelAdmin):
     readonly_fields = ['favorites_count']
     filter_horizontal = ['tags']
 
-    def display_image(self, obj):
+    @admin.display(description='Картинка')
+    def display_image(self, recipe):
         """Показать картинку рецепта."""
-        if obj.image:
-            return format_html(
-                '<img src="{}" width="50" height="50" '
-                'style="object-fit: cover; border-radius: 4px;" />',
-                obj.image.url
+        if recipe.image:
+            return mark_safe(
+                f'<img src="{recipe.image.url}" width="50" height="50" '
+                'style="object-fit: cover; border-radius: 4px;" />'
             )
         return '-'
 
-    display_image.short_description = 'Картинка'
-
+    @admin.display(description='Продукты')
     def display_products(self, obj):
         """Показать список продуктов."""
         products = obj.recipe_ingredients.all()
-        if not products.exists():
-            return '-'
-        return format_html(
+        return mark_safe(
             '<br>'.join(
                 (
                     f'{p.ingredient.name} '
                     f'({p.amount} {p.ingredient.measurement_unit})'
                 )
                 for p in products[:5]
-            ) + ('<br>...' if products.count() > 5 else '')
+            )
         )
 
-    display_products.short_description = 'Продукты'
-
+    @admin.display(description='Теги')
     def display_tags(self, obj):
         """Показать список тегов."""
-        tags = obj.tags.all()
-        if not tags.exists():
-            return '-'
-        tag_strings = [f'<span>{tag.name}</span>' for tag in tags]
-        return format_html(''.join(tag_strings))
+        return format_html_join(
+            '<br>',
+            '{}',
+            ((tag.name,) for tag in obj.tags.all())
+        )
 
-    display_tags.short_description = 'Теги'
-
+    @admin.display(description='В избранном')
     def favorites_count(self, obj):
         """Количество добавлений рецепта в избранное."""
         return obj.favorite_set.count()
-
-    favorites_count.short_description = 'В избранном'
 
 
 @admin.register(RecipeIngredient)
@@ -139,7 +130,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin, BaseTagIngredientAdmin):
     """Страничка управления пользователями в админке."""
 
     list_display = ['id', 'username', 'full_name', 'email', 'display_avatar',
@@ -186,39 +177,28 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('username',)
     readonly_fields = ['display_avatar']
 
-    def full_name(self, obj):
+    @admin.display(description='ФИО')
+    def full_name(self, user):
         """Полное имя пользователя."""
-        full_name = obj.get_full_name()
-        return full_name if full_name.strip() else '-'
+        full_name = user.get_full_name()
+        return full_name
 
-    full_name.short_description = 'ФИО'
-
+    @admin.display(description='Аватар')
     def display_avatar(self, obj):
         """Показать аватар пользователя."""
         if obj.avatar:
-            return format_html(
-                '<img src="{}" width="50" height="50" '
-                'style="border-radius: 50%; object-fit: cover;" />',
-                obj.avatar.url
+            return mark_safe(
+                f'<img src="{obj.avatar.url}" width="50" height="50" '
+                'style="border-radius: 50%; object-fit: cover;" />'
             )
         return '-'
 
-    display_avatar.short_description = 'Аватар'
-
-    def recipes_count(self, obj):
-        """Количество рецептов пользователя."""
-        return obj.recipes.count()
-
-    recipes_count.short_description = 'Рецептов'
-
+    @admin.display(description='Подписок')
     def subscriptions_count(self, obj):
         """Количество подписок пользователя."""
         return obj.subscriptions.count()
 
-    subscriptions_count.short_description = 'Подписок'
-
+    @admin.display(description='Подписчиков')
     def subscribers_count(self, obj):
         """Количество подписчиков пользователя."""
-        return obj.subscribers.count()
-
-    subscribers_count.short_description = 'Подписчиков'
+        return obj.author_subscriptions.count()
