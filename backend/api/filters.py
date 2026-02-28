@@ -1,105 +1,55 @@
 import django_filters
-from django.contrib import admin
-
 from recipes.models import Recipe
-from recipes.constants import CHOICES_YES_NO
 
 
-class CookingTimeFilter(admin.SimpleListFilter):
-    """Фильтр по времени готовки с динамическими порогами."""
+class RecipeFilter(django_filters.FilterSet):
+    """ 
+    Фильтрация рецептов по тегам, автору, избранному и корзине. 
 
-    title = 'Время готовки'
-    parameter_name = 'cooking_time_range'
+    Параметры: 
+        tags: slug тегов (может быть несколько, комбинация ИЛИ) 
+        author: ID автора 
+        is_favorited: 1 - только избранные, 0 - все 
+        is_in_shopping_cart: 1 - только в корзине, 0 - все 
+    """
 
-    def lookups(self, request, model_admin):
-        recipes = Recipe.objects.all()
-        if not recipes.exists():
-            return []
+    tags = django_filters.filters.BaseInFilter(
+        field_name='tags__slug',
+        lookup_expr='in'
+    )
 
-        times = sorted(recipes.values_list('cooking_time', flat=True))
-        fast_threshold = times[len(times) // 3]
-        medium_threshold = times[2 * len(times) // 3]
+    author = django_filters.NumberFilter(
+        field_name='author__id'
+    )
 
-        fast_params = {'cooking_time__range': (0, fast_threshold)}
-        medium_params = {'cooking_time__range': (
-            fast_threshold, medium_threshold)}
-        slow_params = {'cooking_time__range': (medium_threshold, times[-1])}
+    is_favorited = django_filters.BooleanFilter(
+        method='filter_is_favorited'
+    )
 
-        fast_count = recipes.filter(**fast_params).count()
-        medium_count = recipes.filter(**medium_params).count()
-        slow_count = recipes.filter(**slow_params).count()
+    is_in_shopping_cart = django_filters.BooleanFilter(
+        method='filter_is_in_shopping_cart'
+    )
 
-        return [
-            ('fast', f'Быстрые ({fast_count})'),
-            ('medium', f'Средние ({medium_count})'),
-            ('slow', f'Медленные ({slow_count})'),
-        ]
+    class Meta:
+        model = Recipe
+        fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
-    def queryset(self, request, recipes):
-        value = self.value
-        if not value:
-            return recipes
+    def filter_is_favorited(self, recipes, name, value):
+        """ 
+        Фильтрует рецепты по добавлению в избранное текущего пользователя. 
+        """
+        if value:
+            if self.request.user.is_authenticated:
+                return recipes.filter(favorite_set__user=self.request.user)
+            return recipes.none()
+        return recipes
 
-        parts = value.split('-')
-        key = parts[0]
-
-        ranges = {
-            'fast': (0, int(parts[1])),
-            'medium': (int(parts[1]), int(parts[2])),
-            'slow': (int(parts[1]), recipes.order_by(
-                '-cooking_time'
-            ).first().cooking_time),
-        }
-
-        params = {'cooking_time__range': ranges[key]}
-        return recipes.filter(**params)
-
-
-class BaseYesNoFilter(admin.SimpleListFilter):
-    """Базовый фильтр для yes/no логики."""
-
-    title = None
-    parameter_name = None
-    field_name = None
-
-    def lookups(self, request, model_admin):
-        return CHOICES_YES_NO
-
-    def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(**{self.field_name: False}).distinct()
-        elif self.value() == 'no':
-            return queryset.filter(**{self.field_name: True}).distinct()
-        return queryset
-
-
-class HasRecipesFilter(BaseYesNoFilter):
-    """Фильтр 'есть рецепты'."""
-
-    title = 'Есть рецепты'
-    parameter_name = 'has_recipes'
-    field_name = 'recipes__isnull'
-
-
-class HasSubscriptionsFilter(BaseYesNoFilter):
-    """Фильтр 'есть подписки'."""
-
-    title = 'Есть подписки'
-    parameter_name = 'has_subscriptions'
-    field_name = 'subscriptions__isnull'
-
-
-class HasSubscribersFilter(BaseYesNoFilter):
-    """Фильтр 'есть подписчики'."""
-
-    title = 'Есть подписчики'
-    parameter_name = 'has_subscribers'
-    field_name = 'subscribers__isnull'
-
-
-class HasInRecipesFilter(BaseYesNoFilter):
-    """Фильтр 'есть в рецептах'."""
-
-    title = 'Есть в рецептах'
-    parameter_name = 'has_in_recipes'
-    field_name = 'ingredient_in_recipes__isnull'
+    def filter_is_in_shopping_cart(self, recipes, name, value):
+        """ 
+        Фильтрует рецепты по добавлению в корзину текущего пользователя. 
+        """
+        if value:
+            if self.request.user.is_authenticated:
+                return recipes.filter(shoppingcart_set__user=self.request.user)
+            return recipes.none()
+        return recipes
