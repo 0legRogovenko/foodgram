@@ -23,9 +23,9 @@ class CookingTimeFilter(admin.SimpleListFilter):
         medium_threshold = times[2 * len(times) // 3]
 
         self.ranges = {
-            f'fast': (0, fast_threshold),
-            f'medium': (fast_threshold, medium_threshold),
-            f'slow': (medium_threshold, max(times)),
+            'fast': (0, fast_threshold),
+            'medium': (fast_threshold, medium_threshold),
+            'slow': (medium_threshold, max(times)),
         }
 
         return (

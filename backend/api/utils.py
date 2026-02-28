@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.db.models import F, Sum
 from django.template.loader import render_to_string
+
 from recipes.models import RecipeIngredient
 
 
