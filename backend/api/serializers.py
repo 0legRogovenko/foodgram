@@ -1,11 +1,10 @@
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField as DRFBase64ImageField
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-
 from recipes.constants import MIN_AMOUNT, MIN_COOKING_TIME
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Subscription,
                             Tag, User)
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 
 class UsersBaseSerializer(UserSerializer):
