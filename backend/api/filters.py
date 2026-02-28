@@ -3,14 +3,14 @@ from recipes.models import Recipe
 
 
 class RecipeFilter(django_filters.FilterSet):
-    """ 
-    Фильтрация рецептов по тегам, автору, избранному и корзине. 
+    """
+    Фильтрация рецептов по тегам, автору, избранному и корзине.
 
-    Параметры: 
-        tags: slug тегов (может быть несколько, комбинация ИЛИ) 
-        author: ID автора 
-        is_favorited: 1 - только избранные, 0 - все 
-        is_in_shopping_cart: 1 - только в корзине, 0 - все 
+    Параметры:
+        tags: slug тегов (может быть несколько, комбинация ИЛИ)
+        author: ID автора
+        is_favorited: 1 - только избранные, 0 - все
+        is_in_shopping_cart: 1 - только в корзине, 0 - все
     """
 
     tags = django_filters.filters.BaseInFilter(
@@ -35,8 +35,8 @@ class RecipeFilter(django_filters.FilterSet):
         fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
     def filter_is_favorited(self, recipes, name, value):
-        """ 
-        Фильтрует рецепты по добавлению в избранное текущего пользователя. 
+        """
+        Фильтрует рецепты по добавлению в избранное текущего пользователя.
         """
         if value:
             if self.request.user.is_authenticated:
@@ -45,8 +45,8 @@ class RecipeFilter(django_filters.FilterSet):
         return recipes
 
     def filter_is_in_shopping_cart(self, recipes, name, value):
-        """ 
-        Фильтрует рецепты по добавлению в корзину текущего пользователя. 
+        """
+        Фильтрует рецепты по добавлению в корзину текущего пользователя.
         """
         if value:
             if self.request.user.is_authenticated:
