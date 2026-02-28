@@ -3,15 +3,13 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
-from .filters import (CookingTimeFilter, HasInRecipesFilter, 
-                      HasRecipesFilter,
+from .filters import (CookingTimeFilter, HasInRecipesFilter, HasRecipesFilter,
                       HasSubscribersFilter, HasSubscriptionsFilter)
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag, User)
 
 
 class BaseTagIngredientAdmin(admin.ModelAdmin):
-    """"""
     @admin.display(description='Рецептов')
     def recipes_count(self, obj):
         """Количество рецептов с этим тегом или продуктом"""
