@@ -1,12 +1,10 @@
-from uuid import uuid4
-
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
-                            ShortLink, Subscription, Tag, User)
+                            Subscription, Tag, User)
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -17,19 +15,9 @@ from rest_framework.response import Response
 from .filters import RecipeFilter
 from .pagination import LimitPageNumberPagination
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
-                          RecipeWriteSerializer, ShortRecipeSerializer,
-                          TagSerializer, UserSerializer,
+                          RecipeWriteSerializer, TagSerializer, UserSerializer,
                           UserWithRecipesSerializer)
 from .utils import format_shopping_list
-
-
-def _generate_short_code(length=10):
-    return uuid4().hex[:length]
-
-
-def short_link_redirect(request, code):
-    short_link = get_object_or_404(ShortLink, code=code)
-    return redirect('recipes-detail', pk=short_link.recipe_id)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -53,36 +41,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    def _toggle_relation(self, request,
-                         model_class, already_msg,
-                         not_found_msg):
+    def _toggle_relation(self, request, model_class):
         user = request.user
         recipe = self.get_object()
 
         if request.method == 'DELETE':
-            deleted, _ = model_class.objects.filter(
-                user=user, recipe=recipe).delete()
-            if not deleted:
-                raise ValidationError(not_found_msg)
+            obj = get_object_or_404(model_class, user=user, recipe=recipe)
+            obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         _, created = model_class.objects.get_or_create(
             user=user, recipe=recipe)
-        if not created:
-            raise ValidationError(already_msg)
-
-        return Response(
-            ShortRecipeSerializer(recipe).data,
-            status=status.HTTP_201_CREATED
-        )
+        return created
 
     @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk=None):
         return self._toggle_relation(
             request,
             Favorite,
-            already_msg='Рецепт уже добавлен в избранное.',
-            not_found_msg='Этого рецепта нет в избранном.'
         )
 
     @action(detail=True, methods=['post', 'delete'])
@@ -90,8 +66,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self._toggle_relation(
             request,
             ShoppingCart,
-            already_msg='Рецепт уже в списке покупок.',
-            not_found_msg='Этого рецепта нет в списке покупок.'
+
         )
 
     @action(
@@ -102,27 +77,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         cart_items = request.user.shoppingcart_set.all()
         content = format_shopping_list(cart_items)
-
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"'
+        return FileResponse(
+            content, as_attachment=True,
+            filename='shopping_list.txt',
+            content_type='text/plain'
         )
-        return response
 
-    @action(detail=True, methods=['get'])
+    @action(
+        detail=True,
+        methods=['get'])
     def get_link(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, pk=pk)
-        short_link = ShortLink.objects.filter(recipe=recipe).first()
-        if short_link is None:
-            code = _generate_short_code()
-            while ShortLink.objects.filter(code=code).exists():
-                code = _generate_short_code()
-            short_link = ShortLink.objects.create(recipe=recipe, code=code)
+        if not Recipe.objects.filter(pk=pk).exists():
+            raise ValidationError({'detail': 'Рецепт не найден.'})
         short_url = request.build_absolute_uri(
-            reverse('short-link', args=[short_link.code])
+            reverse('short-link', args=[pk])
         )
-
-        return Response({'short-link': short_url})
+        return Response({'short_link': short_url})
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -150,16 +120,11 @@ class UserViewSet(DjoserUserViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['username']
 
-    def patch(self, request, *args, **kwargs):
-        serializer = UserSerializer(
-            request.user,
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated]
+    )
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -169,12 +134,12 @@ class UserViewSet(DjoserUserViewSet):
         user = request.user
 
         if request.method == 'DELETE':
-            deleted, _ = Subscription.objects.filter(
+            obj = get_object_or_404(
+                Subscription,
                 user=user,
                 author_id=pk
-            ).delete()
-            if not deleted:
-                raise ValidationError('Вы не были подписаны на этого автора.')
+            )
+            obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         author = self.get_object()
@@ -205,13 +170,12 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated]
     )
     def subscriptions(self, request):
-        subscriptions = request.user.subscriptions.all()
-        page = self.paginate_queryset(subscriptions)
 
         return self.get_paginated_response(
             UserWithRecipesSerializer(
-                [s.author for s in page],
+                [s.author for s in self.paginate_queryset(
+                    request.user.subscriptions.all())],
                 many=True,
-                context={'request': request}
+                context={'request': request.user.subscriptions.all()}
             ).data
         )

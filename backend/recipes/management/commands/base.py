@@ -22,21 +22,19 @@ class BaseImportCommand(BaseCommand):
     def handle(self, *args, **options):
         """Общая логика загрузки."""
         try:
-            with open(options['file'], 'r', encoding='utf-8') as f:
-                data = json.load(f)
-
+            with open(options['file'], 'r', encoding='utf-8') as file:
+                created = self.model.objects.bulk_create(
+                    (self.model(**item) for item in json.load(file)),
+                    ignore_conflicts=True,
+                )
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Загружено из {options["file"]}: {len(created)}'
+                    )
+                )
         except Exception as e:
-            self.stdout.write(self.style.ERROR(
-                f'Ошибка при загрузке {options["file"]}: {e}')
+            self.stdout.write(
+                self.style.ERROR(
+                    f'Ошибка при загрузке {options["file"]}: {e}'
+                )
             )
-            return
-
-        created = self.model.objects.bulk_create(
-            (self.model(**item) for item in data),
-            ignore_conflicts=True
-        )
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'Загружено из {options["file"]}: {len(created)}'
-            )
-        )

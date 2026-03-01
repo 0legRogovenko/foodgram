@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -245,7 +243,7 @@ class UserRecipeBase(models.Model):
 
     class Meta:
         abstract = True
-        default_related_name = '%(class)s_set'
+        default_related_name = '%(class)s'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
@@ -268,19 +266,3 @@ class ShoppingCart(UserRecipeBase):
     class Meta(UserRecipeBase.Meta):
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины покупок'
-
-
-class ShortLink(models.Model):
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='short_link'
-    )
-    code = models.CharField(max_length=10, unique=True)
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = uuid4().hex[:10]
-            while ShortLink.objects.filter(code=self.code).exists():
-                self.code = uuid4().hex[:10]
-        super().save(*args, **kwargs)

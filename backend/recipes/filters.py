@@ -1,23 +1,21 @@
 from django.contrib import admin
 
-from .constants import CHOICES_YES_NO
 from .models import Recipe
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
-    """Фильтр по времени готовки."""
-
     title = 'Время готовки'
     parameter_name = 'cooking_time_range'
+    ranges = {}
 
     def lookups(self, request, model_admin):
-        recipes = Recipe.objects.all()
-        if not recipes.exists():
+        times = list(
+            Recipe.objects.values_list('cooking_time', flat=True).distinct()
+        )
+        if len(times) < 3:
             return ()
 
-        times = sorted(
-            recipes.values_list('cooking_time', flat=True)
-        )
+        times.sort()
 
         fast_threshold = times[len(times) // 3]
         medium_threshold = times[2 * len(times) // 3]
@@ -35,27 +33,25 @@ class CookingTimeFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, recipes):
-        if not self.value():
+        if self.value() not in self.ranges:
             return recipes
 
-        ranges = getattr(self, 'ranges', {})
-        selected_range = ranges.get(self.value())
-
-        if selected_range:
-            return recipes.filter(
-                cooking_time__range=selected_range
-            )
-
-        return recipes
+        return recipes.filter(
+            cooking_time__range=self.ranges[self.value()]
+        )
 
 
 class BaseHasRelatedFilter(admin.SimpleListFilter):
     """Базовый фильтр наличия связанных объектов."""
 
     related_field = None
+    choices_yes_no = (
+        ('yes', 'Да'),
+        ('no', 'Нет'),
+    )
 
     def lookups(self, request, model_admin):
-        return CHOICES_YES_NO
+        return self.choices_yes_no
 
     def queryset(self, request, objects):
         if not self.value():

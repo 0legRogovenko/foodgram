@@ -24,8 +24,8 @@ class UsersBaseSerializer(UserSerializer):
                 )
 
     class Meta(UserSerializer.Meta):
-        fields = [*UserSerializer.Meta.fields, 'is_subscribed']
-        read_only_fields = UserSerializer.Meta.fields
+        fields = [*UserSerializer.Meta.fields, 'avatar', 'is_subscribed']
+        read_only_fields = fields
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
@@ -48,23 +48,12 @@ class UserWithRecipesSerializer(UsersBaseSerializer):
         """Метод для получения рецептов"""
         request = self.context.get('request')
         recipes = user.recipes.all()
-        raw_limit = request.query_params.get(
+
+        recipes_limit = int(request.query_params.get(
             'recipes_limit',
             10 ** 10
-        )
-        try:
-            recipes_limit = int(raw_limit)
-        except (TypeError, ValueError) as exc:
-            raise ValidationError(
-                {'recipes_limit': 'Укажите целое число.'}) from exc
-        if recipes_limit < 1:
-            raise ValidationError(
-                {'recipes_limit': 'Значение должно быть больше нуля.'})
-
-        return ShortRecipeSerializer(
-            recipes[:recipes_limit],
-            many=True
-        ).data
+        ))
+        return recipes[:recipes_limit]
 
     class Meta(UsersBaseSerializer.Meta):
         fields = [*UsersBaseSerializer.Meta.fields, 'recipes', 'recipes_count']
@@ -136,12 +125,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
-    def _check_user_relation(self, obj, related_name):
+    def _check_user_relation(self, obj, model_class):
         """Проверяет связь пользователя с объектом."""
         request = self.context.get('request')
-        if not (request and request.user.is_authenticated):
-            return False
-        return getattr(obj, related_name).filter(user=request.user).exists()
+        return (
+            request
+            and request.user.is_authenticated
+            and getattr(obj, model_class).filter(user=request.user).exists()
+        )
 
     def get_is_favorited(self, obj):
         """Проверяет, добавил ли пользователь рецепт в избранное."""
@@ -183,10 +174,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = [
-            'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'text', 'cooking_time'
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         ]
-        read_only_fields = ['id', 'author']
 
     def _create_ingredients(self, recipe, ingredients_data):
         """Метод для создания ингредиентов рецепта."""

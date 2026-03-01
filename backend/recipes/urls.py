@@ -1,6 +1,7 @@
-from api.views import short_link_redirect
 from django.urls import path
 
+from .views import short_link_redirect
+
 urlpatterns = [
-    path('<str:code>/', short_link_redirect, name='short-link'),
+    path('<int:recipe_id>/', short_link_redirect, name='short-link'),
 ]

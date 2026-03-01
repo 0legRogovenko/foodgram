@@ -29,18 +29,15 @@ def format_shopping_list(cart_items):
         else:
             ingredients[key]['amount'] += item['total_amount']
 
-    products = products = sorted(ingredients.values(), key=lambda x: x['name'])
+    products = sorted(ingredients.values(), key=lambda x: x['name'])
 
-    recipes = (
-        cart_items
-        .values_list('recipe__name', 'recipe__author__username')
-        .distinct()
+    recipes = cart_items.distinct()
+
+    return render_to_string(
+        'shopping_list.txt',
+        {
+            'created_at': datetime.now().strftime('%d.%m.%Y %H:%M'),
+            'products': products,
+            'recipes': recipes,
+        }
     )
-
-    context = {
-        'created_at': datetime.now().strftime('%d.%m.%Y %H:%M'),
-        'products': products,
-        'recipes': recipes,
-    }
-
-    return render_to_string('shopping_list.txt', context)
