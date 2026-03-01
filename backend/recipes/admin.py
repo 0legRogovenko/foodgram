@@ -13,7 +13,6 @@ class RecipesCountMixin:
 
     @admin.display(description='Рецептов')
     def recipes_count(self, obj):
-        """Количество рецептов с этим тегом или продуктом"""
         return obj.recipes.count()
 
 
@@ -33,7 +32,7 @@ class IngredientAdmin(RecipesCountMixin, admin.ModelAdmin):
     list_display = [*RecipesCountMixin.list_display,
                     'id', 'name', 'measurement_unit']
     list_filter = ['measurement_unit', HasInRecipesFilter]
-    search_fields = ['name', 'measurement_unit', 'recipes__name']
+    search_fields = ['name', 'measurement_unit']
     ordering = ['name', 'measurement_unit']
 
 
@@ -45,7 +44,7 @@ class RecipeAdmin(admin.ModelAdmin):
                     'display_products', 'display_tags', 'favorites_count']
     list_filter = ['author', 'tags', CookingTimeFilter]
     search_fields = ['name', 'author__username', 'tags__name',
-                     'recipe_ingredients__ingredient__name']
+                     'ingredients__name']
     ordering = ['name']
     readonly_fields = ['favorites_count']
     filter_horizontal = ['tags']

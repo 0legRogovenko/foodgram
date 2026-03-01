@@ -1,8 +1,8 @@
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField as DRFBase64ImageField
 from recipes.constants import MIN_AMOUNT, MIN_COOKING_TIME
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Subscription,
-                            Tag, User)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Subscription, Tag, User)
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -46,14 +46,12 @@ class UserWithRecipesSerializer(UsersBaseSerializer):
 
     def get_recipes(self, user):
         """Метод для получения рецептов"""
-        request = self.context.get('request')
-        recipes = user.recipes.all()
 
-        recipes_limit = int(request.query_params.get(
+        return user.recipes.all()[:int(self.context.get(
+            'request').query_params.get(
             'recipes_limit',
             10 ** 10
-        ))
-        return recipes[:recipes_limit]
+        ))]
 
     class Meta(UsersBaseSerializer.Meta):
         fields = [*UsersBaseSerializer.Meta.fields, 'recipes', 'recipes_count']
@@ -136,11 +134,11 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         """Проверяет, добавил ли пользователь рецепт в избранное."""
-        return self._check_user_relation(obj, 'favorite_set')
+        return self._check_user_relation(obj, Favorite)
 
     def get_is_in_shopping_cart(self, obj):
         """Проверяет, находится ли рецепт в корзине пользователя."""
-        return self._check_user_relation(obj, 'shoppingcart_set')
+        return self._check_user_relation(obj, ShoppingCart)
 
     class Meta:
         model = Recipe
@@ -174,8 +172,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = [
-            'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
+            'tags', 'ingredients',
+            'name', 'image', 'text', 'cooking_time'
         ]
 
     def _create_ingredients(self, recipe, ingredients_data):
@@ -188,10 +186,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             )
             for ingredient_data in ingredients_data
         )
-
-    def _set_tags(self, recipe, tags):
-        """Метод для установки тегов рецепта."""
-        recipe.tags.set(tags)
 
     def validate(self, attrs):
         ingredient_data = attrs.get('recipe_ingredients')
@@ -207,7 +201,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             if len(ids) != len(set(ids)):
                 duplicates = [i for i in set(ids) if ids.count(i) > 1]
                 raise ValidationError(
-                    f'Ингредиенты должны быть уникальными. '
                     f'Повторяющиеся ингредиенты: '
                     f'{duplicates}'
                 )
@@ -222,7 +215,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             if len(tag_ids) != len(set(tag_ids)):
                 duplicates = [t for t in set(tag_ids) if tag_ids.count(t) > 1]
                 raise ValidationError(
-                    f'Теги должны быть уникальными. '
                     f'Повторяющиеся теги: '
                     f'{duplicates}'
                 )
@@ -235,7 +227,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         validated_data['author'] = self.context['request'].user
 
         recipe = super().create(validated_data)
-        self._set_tags(recipe, tags)
+        self.recipe.tags.set(tags)
         self._create_ingredients(recipe, ingredients)
 
         return recipe
@@ -244,7 +236,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         ingredient_data = validated_data.pop('recipe_ingredients', None)
 
-        self._set_tags(instance, tags)
+        self.recipe.tags.set(tags)
 
         instance.recipe_ingredients.all().delete()
         self._create_ingredients(instance, ingredient_data)

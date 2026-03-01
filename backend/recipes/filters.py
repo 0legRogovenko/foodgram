@@ -10,12 +10,12 @@ class CookingTimeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         times = list(
-            Recipe.objects.values_list('cooking_time', flat=True).distinct()
+            Recipe.objects.order_by(
+                'cooking_time'
+            ).values_list('cooking_time', flat=True).distinct()
         )
         if len(times) < 3:
             return ()
-
-        times.sort()
 
         fast_threshold = times[len(times) // 3]
         medium_threshold = times[2 * len(times) // 3]
@@ -45,18 +45,17 @@ class BaseHasRelatedFilter(admin.SimpleListFilter):
     """Базовый фильтр наличия связанных объектов."""
 
     related_field = None
-    choices_yes_no = (
+    CHOICES_YES_NO = (
         ('yes', 'Да'),
         ('no', 'Нет'),
     )
 
     def lookups(self, request, model_admin):
-        return self.choices_yes_no
+        return self.CHOICES_YES_NO
 
     def queryset(self, request, objects):
         if not self.value():
             return objects
-
         condition = {
             f'{self.related_field}__isnull': self.value() == 'no'
         }

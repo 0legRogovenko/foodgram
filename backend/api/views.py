@@ -43,16 +43,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def _toggle_relation(self, request, model_class):
         user = request.user
-        recipe = self.get_object()
+        recipe_id = self.kwargs['pk']
+
+        exists = model_class.objects.filter(
+            user=user,
+            recipe_id=recipe_id
+        ).exists()
 
         if request.method == 'DELETE':
-            obj = get_object_or_404(model_class, user=user, recipe=recipe)
-            obj.delete()
+
+            if not exists:
+                raise ValidationError({'detail': 'Не найдено.'})
+
+            model_class.objects.filter(
+                user=user,
+                recipe_id=recipe_id
+            ).delete()
+
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        _, created = model_class.objects.get_or_create(
-            user=user, recipe=recipe)
-        return created
+        if exists:
+            raise ValidationError({'detail': 'Уже добавлено.'})
+
+        model_class.objects.create(
+            user=user,
+            recipe_id=recipe_id
+        )
+
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk=None):
@@ -75,10 +93,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        cart_items = request.user.shoppingcart_set.all()
-        content = format_shopping_list(cart_items)
+
         return FileResponse(
-            content, as_attachment=True,
+            format_shopping_list(
+                request.user.shoppingcart_set.all()), as_attachment=True,
             filename='shopping_list.txt',
             content_type='text/plain'
         )
@@ -88,11 +106,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['get'])
     def get_link(self, request, pk=None):
         if not Recipe.objects.filter(pk=pk).exists():
-            raise ValidationError({'detail': 'Рецепт не найден.'})
-        short_url = request.build_absolute_uri(
+            raise ValidationError({'detail': f'Рецепт с id={pk} не найден.'})
+
+        return Response({'short_link': request.build_absolute_uri(
             reverse('short-link', args=[pk])
-        )
-        return Response({'short_link': short_url})
+        )})
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -125,21 +143,15 @@ class UserViewSet(DjoserUserViewSet):
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
     def subscribe(self, request, pk=None):
         user = request.user
 
         if request.method == 'DELETE':
-            obj = get_object_or_404(
+            get_object_or_404(
                 Subscription,
                 user=user,
                 author_id=pk
-            )
-            obj.delete()
+            ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         author = self.get_object()
