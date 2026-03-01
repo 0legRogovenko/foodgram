@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.safestring import mark_safe
@@ -9,7 +10,10 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag, User)
 
 
-admin.site.unregister(Group)
+try:
+    admin.site.unregister(Group)
+except NotRegistered:
+    pass
 
 
 class RecipesCountMixin:
@@ -66,13 +70,16 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='Продукты')
     def display_products(self, obj):
         """Показать список продуктов."""
+        ingredients = RecipeIngredient.objects.select_related(
+            'ingredient'
+        ).filter(recipe=obj)
         return mark_safe(
             '<br>'.join(
                 (
-                    f'{p.ingredient.name} '
-                    f'({p.amount} {p.ingredient.measurement_unit})'
+                    f'{item.ingredient.name} '
+                    f'({item.amount} {item.ingredient.measurement_unit})'
                 )
-                for p in obj.recipe_ingredients.all()
+                for item in ingredients
             )
         )
 
@@ -84,7 +91,7 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='В избранном')
     def favorites_count(self, recipes):
         """Количество добавлений рецепта в избранное."""
-        return recipes.favorite_set.count()
+        return Favorite.objects.filter(recipe=recipes).count()
 
 
 @admin.register(RecipeIngredient)
