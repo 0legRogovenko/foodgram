@@ -12,7 +12,7 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .pagination import LimitPageNumberPagination
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeWriteSerializer, TagSerializer, UserSerializer,
@@ -45,30 +45,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         recipe_id = self.kwargs['pk']
 
-        exists = model_class.objects.filter(
-            user=user,
-            recipe_id=recipe_id
-        ).exists()
-
         if request.method == 'DELETE':
-
-            if not exists:
-                raise ValidationError({'detail': 'Не найдено.'})
-
-            model_class.objects.filter(
+            get_object_or_404(
+                model_class,
                 user=user,
                 recipe_id=recipe_id
             ).delete()
-
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if exists:
-            raise ValidationError({'detail': 'Уже добавлено.'})
-
-        model_class.objects.create(
+        _, created = model_class.objects.get_or_create(
             user=user,
             recipe_id=recipe_id
         )
+        if not created:
+            raise ValidationError({'detail': 'Уже добавлено.'})
 
         return Response(status=status.HTTP_201_CREATED)
 
@@ -126,7 +116,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
-    search_fields = ['name']
+    filterset_class = IngredientFilter
     http_method_names = ['get']
     pagination_class = None
 
@@ -188,6 +178,6 @@ class UserViewSet(DjoserUserViewSet):
                 [s.author for s in self.paginate_queryset(
                     request.user.subscriptions.all())],
                 many=True,
-                context={'request': request.user.subscriptions.all()}
+                context={'request': request}
             ).data
         )

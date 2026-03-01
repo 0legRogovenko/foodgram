@@ -129,7 +129,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return (
             request
             and request.user.is_authenticated
-            and getattr(obj, model_class).filter(user=request.user).exists()
+            and model_class.objects.filter(
+                user=request.user,
+                recipe=obj
+            ).exists()
         )
 
     def get_is_favorited(self, obj):
@@ -227,7 +230,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         validated_data['author'] = self.context['request'].user
 
         recipe = super().create(validated_data)
-        self.recipe.tags.set(tags)
+        recipe.tags.set(tags)
         self._create_ingredients(recipe, ingredients)
 
         return recipe
@@ -236,9 +239,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         ingredient_data = validated_data.pop('recipe_ingredients', None)
 
-        self.recipe.tags.set(tags)
+        if tags is not None:
+            instance.tags.set(tags)
 
-        instance.recipe_ingredients.all().delete()
-        self._create_ingredients(instance, ingredient_data)
+        if ingredient_data is not None:
+            instance.recipe_ingredients.all().delete()
+            self._create_ingredients(instance, ingredient_data)
 
         return super().update(instance, validated_data)

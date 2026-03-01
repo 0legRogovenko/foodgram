@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.safestring import mark_safe
 
@@ -6,6 +7,9 @@ from .filters import (CookingTimeFilter, HasInRecipesFilter, HasRecipesFilter,
                       HasSubscribersFilter, HasSubscriptionsFilter)
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Subscription, Tag, User)
+
+
+admin.site.unregister(Group)
 
 
 class RecipesCountMixin:
@@ -75,11 +79,7 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='Теги')
     def display_tags(self, obj):
         """Показать список тегов."""
-        return mark_safe(
-            '<br>',
-            '{}',
-            (tag.name for tag in obj.tags.all())
-        )
+        return mark_safe('<br>'.join(tag.name for tag in obj.tags.all()))
 
     @admin.display(description='В избранном')
     def favorites_count(self, recipes):
@@ -139,7 +139,12 @@ class UserAdmin(BaseUserAdmin, RecipesCountMixin):
         (None, {'fields': ('username', 'password')}),
         (
             'Персональная информация',
-            {'fields': ('first_name', 'last_name', 'email', 'avatar')},
+            {
+                'fields': (
+                    'first_name', 'last_name', 'email', 'avatar',
+                    'display_avatar'
+                )
+            },
         ),
         (
             'Права доступа',
@@ -148,8 +153,6 @@ class UserAdmin(BaseUserAdmin, RecipesCountMixin):
                     'is_active',
                     'is_staff',
                     'is_superuser',
-                    'groups',
-                    'user_permissions',
                 )
             },
         ),

@@ -1,5 +1,5 @@
 import django_filters
-from recipes.models import Recipe
+from recipes.models import Ingredient, Recipe
 
 
 class RecipeFilter(django_filters.FilterSet):
@@ -53,3 +53,16 @@ class RecipeFilter(django_filters.FilterSet):
                 return recipes.filter(shoppingcart_set__user=self.request.user)
             return recipes.none()
         return recipes
+
+
+class IngredientFilter(django_filters.FilterSet):
+    """Фильтрация ингредиентов по началу названия."""
+
+    name = django_filters.CharFilter(
+        field_name='name',
+        lookup_expr='istartswith'
+    )
+
+    class Meta:
+        model = Ingredient
+        fields = ['name']

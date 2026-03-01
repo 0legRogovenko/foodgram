@@ -6,6 +6,7 @@
 ## Автор
 
 **Олег Роговенко**
+- ФИО: Роговенко Олег
 - GitHub: [0legRogovenko](https://github.com/0legRogovenko)
 - Email: [0808006oleg@gmail.com](mailto:0808006oleg@gmail.com)
 
@@ -144,6 +145,7 @@ gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000
 - Приложение: [http://localhost:9090/](http://localhost:9090/)
 - API: [http://localhost:9090/api/](http://localhost:9090/api/)
 - Админка: [http://localhost:9090/admin/](http://localhost:9090/admin/)
+- Документация API: [http://localhost:9090/api/docs/](http://localhost:9090/api/docs/)
 
 ### Локально
 - API: [http://127.0.0.1:8000/api/](http://127.0.0.1:8000/api/)

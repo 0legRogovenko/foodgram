@@ -242,7 +242,7 @@ class Api {
   }
 
   copyRecipeLink({ id }) {
-    return fetch(`/api/recipes/${id}/get-link/`, {
+    return fetch(`/api/recipes/${id}/get_link/`, {
       method: "GET",
       headers: {
         ...this._headers,
