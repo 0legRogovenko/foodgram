@@ -25,9 +25,13 @@ class Api {
           document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
           a.click();
           a.remove(); //afterwards we remove the element again
+          resolve();
         });
       }
-      reject();
+      return res
+        .json()
+        .then((data) => reject(data))
+        .catch(() => reject({ detail: `HTTP ${res.status}` }));
     });
   }
 

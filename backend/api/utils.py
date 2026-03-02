@@ -9,7 +9,7 @@ def format_shopping_list(cart_items):
     """Форматирует список покупок на основе товаров в корзине."""
 
     ingredients_data = RecipeIngredient.objects.filter(
-        recipe__shoppingcart_set__in=cart_items
+        recipe__shoppingcart__in=cart_items
     ).values(
         ingredient_name=F('ingredient__name'),
         measurement_unit=F('ingredient__measurement_unit')

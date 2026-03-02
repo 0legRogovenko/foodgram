@@ -1,5 +1,5 @@
 import django_filters
-from recipes.models import Ingredient, Recipe
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart
 
 
 class RecipeFilter(django_filters.FilterSet):
@@ -46,7 +46,11 @@ class RecipeFilter(django_filters.FilterSet):
         """
         if value:
             if self.request.user.is_authenticated:
-                return recipes.filter(favorite_set__user=self.request.user)
+                return recipes.filter(
+                    id__in=Favorite.objects.filter(
+                        user=self.request.user
+                    ).values('recipe_id')
+                )
             return recipes.none()
         return recipes
 
@@ -56,7 +60,11 @@ class RecipeFilter(django_filters.FilterSet):
         """
         if value:
             if self.request.user.is_authenticated:
-                return recipes.filter(shoppingcart_set__user=self.request.user)
+                return recipes.filter(
+                    id__in=ShoppingCart.objects.filter(
+                        user=self.request.user
+                    ).values('recipe_id')
+                )
             return recipes.none()
         return recipes
 

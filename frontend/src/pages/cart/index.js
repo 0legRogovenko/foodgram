@@ -31,6 +31,10 @@ const Cart = ({ updateOrders, orders }) => {
 
   const downloadDocument = () => {
     api.downloadFile()
+      .catch((err) => {
+        const message = err?.detail || Object.values(err || {}).join(', ')
+        alert(message || 'Не удалось скачать список покупок')
+      })
   }
 
   return <Main>
@@ -57,4 +61,3 @@ const Cart = ({ updateOrders, orders }) => {
 }
 
 export default Cart
-

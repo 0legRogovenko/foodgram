@@ -86,7 +86,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return FileResponse(
             format_shopping_list(
-                request.user.shoppingcart_set.all()), as_attachment=True,
+                request.user.shoppingcart.all()), as_attachment=True,
             filename='shopping_list.txt',
             content_type='text/plain'
         )
