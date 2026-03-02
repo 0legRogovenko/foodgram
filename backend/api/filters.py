@@ -13,10 +13,7 @@ class RecipeFilter(django_filters.FilterSet):
         is_in_shopping_cart: 1 - только в корзине, 0 - все
     """
 
-    tags = django_filters.filters.BaseInFilter(
-        field_name='tags__slug',
-        lookup_expr='in'
-    )
+    tags = django_filters.CharFilter(method='filter_tags')
 
     author = django_filters.NumberFilter(
         field_name='author__id'
@@ -33,6 +30,15 @@ class RecipeFilter(django_filters.FilterSet):
     class Meta:
         model = Recipe
         fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
+
+    def filter_tags(self, recipes, name, value):
+        """Фильтрует рецепты по slug тегов, переданных списком в query params."""
+        tags = self.request.query_params.getlist(name)
+        if len(tags) == 1 and ',' in tags[0]:
+            tags = [tag for tag in tags[0].split(',') if tag]
+        if not tags:
+            return recipes
+        return recipes.filter(tags__slug__in=tags).distinct()
 
     def filter_is_favorited(self, recipes, name, value):
         """
