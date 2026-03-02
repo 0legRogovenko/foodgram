@@ -49,7 +49,7 @@ class RecipeAdmin(admin.ModelAdmin):
     """Страничка управления рецептами в админке."""
 
     list_display = [
-        'id', 'display_name', 'display_author', 'display_cooking_time',
+        'id', 'name', 'author', 'cooking_time',
         'display_image', 'display_products', 'display_tags', 'favorites_count'
     ]
     list_filter = ['author', 'tags', CookingTimeFilter]
