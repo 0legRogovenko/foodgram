@@ -10,7 +10,19 @@ class Api {
         return resolve(res);
       }
       const func = res.status < 400 ? resolve : reject;
-      res.json().then((data) => func(data));
+      return res
+        .text()
+        .then((text) => {
+          if (!text) {
+            return func({ detail: `HTTP ${res.status}` });
+          }
+          try {
+            return func(JSON.parse(text));
+          } catch (e) {
+            return func({ detail: text });
+          }
+        })
+        .catch(() => reject({ detail: `HTTP ${res.status}` }));
     });
   }
 

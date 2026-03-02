@@ -104,6 +104,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             reverse('short-link', args=[pk])
         )})
 
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='get-link',
+        url_name='get-link'
+    )
+    def get_link_legacy(self, request, pk=None):
+        return self.get_link(request, pk)
+
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
