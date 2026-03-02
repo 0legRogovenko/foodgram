@@ -31,7 +31,7 @@ from .serializers import (
     RecipeReadSerializer,
     RecipeWriteSerializer,
     TagSerializer,
-    UserSerializer,
+    UsersBaseSerializer,
     UserWithRecipesSerializer,
 )
 from .utils import format_shopping_list
@@ -149,7 +149,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UsersBaseSerializer
     pagination_class = LimitPageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['username']
