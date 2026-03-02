@@ -1,7 +1,6 @@
-from datetime import datetime
-
 from django.db.models import F, Sum
 from django.template.loader import render_to_string
+from django.utils import timezone
 from recipes.models import RecipeIngredient
 
 
@@ -19,10 +18,10 @@ def format_shopping_list(cart_items):
 
     ingredients = {}
     for item in ingredients_data:
-        key = item['ingredient_name'].lower()
+        key = (item['ingredient_name'], item['measurement_unit'])
         if key not in ingredients:
             ingredients[key] = {
-                'name': item['ingredient_name'].capitalize(),
+                'name': item['ingredient_name'],
                 'amount': item['total_amount'],
                 'unit': item['measurement_unit'],
             }
@@ -36,7 +35,7 @@ def format_shopping_list(cart_items):
     return render_to_string(
         'shopping_list.txt',
         {
-            'created_at': datetime.now().strftime('%d.%m.%Y %H:%M'),
+            'created_at': timezone.localtime(),
             'products': products,
             'recipes': recipes,
         }

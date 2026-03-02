@@ -176,14 +176,12 @@ function App() {
   };
 
   const updateOrders = (add) => {
-    if (!add && orders <= 0) {
-      return;
-    }
-    if (add) {
-      setOrders(orders + 1);
-    } else {
-      setOrders(orders - 1);
-    }
+    setOrders((prev) => {
+      if (add) {
+        return prev + 1;
+      }
+      return Math.max(prev - 1, 0);
+    });
   };
 
   useEffect((_) => {

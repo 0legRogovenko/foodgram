@@ -58,10 +58,6 @@ class UserWithRecipesSerializer(UsersBaseSerializer):
         read_only_fields = fields
 
 
-class UserSerializer(UsersBaseSerializer):
-    """Сериализатор пользователя для API."""
-
-
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для получения аватара пользователя."""
     avatar = DRFBase64ImageField(required=False)
@@ -118,7 +114,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения модели Recipe."""
 
     tags = TagSerializer(many=True, read_only=True)
-    author = UserSerializer(read_only=True)
+    author = UsersBaseSerializer(read_only=True)
     ingredients = RecipeIngredientReadSerializer(
         source='recipe_ingredients',
         many=True,
@@ -182,7 +178,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'id', 'tags', 'ingredients',
             'name', 'image', 'text', 'cooking_time'
         ]
-        read_only_fields = ['id']
 
     def _create_ingredients(self, recipe, ingredients_data):
         """Метод для создания ингредиентов рецепта."""
@@ -230,27 +225,19 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        recipe = Recipe.objects.create(
-            author=self.context['request'].user,
-            **{
-                key: value
-                for key, value in validated_data.items()
-                if key not in ('tags', 'recipe_ingredients')
-            }
-        )
-        recipe.tags.set(validated_data['tags'])
-        self._create_ingredients(recipe, validated_data['recipe_ingredients'])
+        ingredients_data = validated_data.pop('recipe_ingredients')
+        validated_data['author'] = self.context['request'].user
+        recipe = super().create(validated_data)
+        self._create_ingredients(recipe, ingredients_data)
 
         return recipe
 
     def update(self, instance, validated_data):
-        if 'tags' in validated_data:
-            instance.tags.set(validated_data.pop('tags'))
-        if 'recipe_ingredients' in validated_data:
-            instance.recipe_ingredients.all().delete()
-            self._create_ingredients(
-                instance,
-                validated_data.pop('recipe_ingredients')
-            )
+        instance.tags.set(validated_data.pop('tags'))
+        instance.recipe_ingredients.all().delete()
+        self._create_ingredients(
+            instance,
+            validated_data.pop('recipe_ingredients')
+        )
 
         return super().update(instance, validated_data)

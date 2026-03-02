@@ -76,18 +76,6 @@ class RecipeAdmin(admin.ModelAdmin):
         ),
     )
 
-    @admin.display(description='Название')
-    def display_name(self, recipe):
-        return recipe.name
-
-    @admin.display(description='Автор')
-    def display_author(self, recipe):
-        return recipe.author
-
-    @admin.display(description='Время (мин)')
-    def display_cooking_time(self, recipe):
-        return recipe.cooking_time
-
     @admin.display(description='Картинка')
     def display_image(self, recipe):
         """Показать картинку рецепта."""

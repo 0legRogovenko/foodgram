@@ -1,23 +1,39 @@
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
-from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
-                            Subscription, Tag, User)
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    ShoppingCart,
+    Subscription,
+    Tag,
+    User,
+)
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import LimitPageNumberPagination
-from .serializers import (IngredientSerializer, RecipeReadSerializer,
-                          RecipeWriteSerializer, TagSerializer, UserSerializer,
-                          UserWithRecipesSerializer)
+from .serializers import (
+    IngredientSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer,
+    TagSerializer,
+    UserSerializer,
+    UserWithRecipesSerializer,
+)
 from .utils import format_shopping_list
 
 
@@ -42,7 +58,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    def _toggle_relation(self, request, model_class, relation_name):
+    def _toggle_relation(self, request, model_class):
         user = request.user
         recipe_id = self.kwargs['pk']
 
@@ -54,13 +70,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        _, created = model_class.objects.get_or_create(
+        relation, created = model_class.objects.get_or_create(
             user=user,
             recipe_id=recipe_id
         )
         if not created:
             raise ValidationError(
-                {'detail': f'Рецепт уже добавлен в {relation_name}.'}
+                {
+                    'detail': (
+                        f'Рецепт "{relation.recipe.name}" уже добавлен '
+                        f'в {model_class._meta.verbose_name}.'
+                    )
+                }
             )
 
         return Response(status=status.HTTP_201_CREATED)
@@ -70,7 +91,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self._toggle_relation(
             request,
             Favorite,
-            'избранное',
         )
 
     @action(detail=True, methods=['post', 'delete'])
@@ -78,7 +98,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self._toggle_relation(
             request,
             ShoppingCart,
-            'корзину',
         )
 
     @action(

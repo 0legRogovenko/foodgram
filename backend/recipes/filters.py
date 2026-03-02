@@ -21,18 +21,19 @@ class CookingTimeFilter(admin.SimpleListFilter):
         medium_threshold = times[2 * len(times) // 3]
 
         self.ranges = {
-            'fast': (0, fast_threshold),
-            'medium': (fast_threshold, medium_threshold),
-            'slow': (medium_threshold, max(times)),
+            'fast': {'max': fast_threshold},
+            'medium': {'min': fast_threshold, 'max': medium_threshold},
+            'slow': {'min': medium_threshold},
         }
         fast_count = Recipe.objects.filter(
-            cooking_time__range=self.ranges['fast']
+            cooking_time__lte=self.ranges['fast']['max']
         ).count()
         medium_count = Recipe.objects.filter(
-            cooking_time__range=self.ranges['medium']
+            cooking_time__gt=self.ranges['medium']['min'],
+            cooking_time__lte=self.ranges['medium']['max']
         ).count()
         slow_count = Recipe.objects.filter(
-            cooking_time__range=self.ranges['slow']
+            cooking_time__gt=self.ranges['slow']['min']
         ).count()
 
         return (
@@ -54,9 +55,16 @@ class CookingTimeFilter(admin.SimpleListFilter):
         if self.value() not in self.ranges:
             return recipes
 
-        return recipes.filter(
-            cooking_time__range=self.ranges[self.value()]
-        )
+        if self.value() == 'fast':
+            return recipes.filter(cooking_time__lte=self.ranges['fast']['max'])
+
+        if self.value() == 'medium':
+            return recipes.filter(
+                cooking_time__gt=self.ranges['medium']['min'],
+                cooking_time__lte=self.ranges['medium']['max']
+            )
+
+        return recipes.filter(cooking_time__gt=self.ranges['slow']['min'])
 
 
 class BaseHasRelatedFilter(admin.SimpleListFilter):
