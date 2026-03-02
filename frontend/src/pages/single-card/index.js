@@ -37,7 +37,11 @@ const SingleCard = ({ loadItem, updateOrders }) => {
   const handleCopyLink = () => {
     api
       .copyRecipeLink({ id })
-      .then(({ short_link: shortLink }) => {
+      .then((response) => {
+        const shortLink = response.short_link || response.shortLink;
+        if (!shortLink) {
+          throw new Error("Не удалось получить короткую ссылку");
+        }
         navigator.clipboard
           .writeText(shortLink)
           .then(() => {
@@ -57,7 +61,12 @@ const SingleCard = ({ loadItem, updateOrders }) => {
             });
           });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        setNotificationError({
+          text: err?.detail || err?.message || "Не удалось скопировать ссылку",
+          position: "40px",
+        });
+      });
   };
 
   const handleErrorClose = () => {

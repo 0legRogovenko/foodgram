@@ -145,9 +145,15 @@ const RecipeCreate = ({ onEdit }) => {
             api
               .createRecipe(data)
               .then((res) => {
+                if (!res?.id) {
+                  throw new Error("Сервер не вернул id созданного рецепта");
+                }
                 history.push(`/recipes/${res.id}`);
               })
               .catch((err) => {
+                if (err?.message) {
+                  return setSubmitError({ submitError: err.message });
+                }
                 const { non_field_errors, ingredients, cooking_time } = err;
                 if (non_field_errors) {
                   return setSubmitError({

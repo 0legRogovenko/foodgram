@@ -39,7 +39,13 @@ export default function useRecipe () {
         author_id
       })
       .then(_ => {
-        const recipeUpdated = { ...recipe, author: { ...recipe.author, is_subscribed: toSubscribe } }
+        const recipeUpdated = {
+          ...recipe,
+          author: {
+            ...(recipe.author || {}),
+            is_subscribed: toSubscribe
+          }
+        }
         setRecipe(recipeUpdated)
       })
       .catch(err => {

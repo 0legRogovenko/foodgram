@@ -97,7 +97,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['get'])
+        methods=['get'],
+        url_path='get-link',
+        url_name='get-link'
+    )
     def get_link(self, request, pk=None):
         if not Recipe.objects.filter(pk=pk).exists():
             raise ValidationError({'detail': f'Рецепт с id={pk} не найден.'})

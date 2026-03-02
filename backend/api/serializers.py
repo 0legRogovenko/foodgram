@@ -1,4 +1,4 @@
-from djoser.serializers import UserSerializer
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField as DRFBase64ImageField
 from recipes.constants import MIN_AMOUNT, MIN_COOKING_TIME
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-class UsersBaseSerializer(UserSerializer):
+class UsersBaseSerializer(DjoserUserSerializer):
     """Миксин для сериализаторов пользователей."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -23,8 +23,8 @@ class UsersBaseSerializer(UserSerializer):
                     author=user).exists()
                 )
 
-    class Meta(UserSerializer.Meta):
-        fields = [*UserSerializer.Meta.fields, 'avatar', 'is_subscribed']
+    class Meta(DjoserUserSerializer.Meta):
+        fields = [*DjoserUserSerializer.Meta.fields, 'avatar', 'is_subscribed']
         read_only_fields = fields
 
 
@@ -56,6 +56,10 @@ class UserWithRecipesSerializer(UsersBaseSerializer):
     class Meta(UsersBaseSerializer.Meta):
         fields = [*UsersBaseSerializer.Meta.fields, 'recipes', 'recipes_count']
         read_only_fields = fields
+
+
+class UserSerializer(UsersBaseSerializer):
+    """Сериализатор пользователя для API."""
 
 
 class AvatarSerializer(serializers.ModelSerializer):
