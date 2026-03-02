@@ -6,6 +6,6 @@
 {% endfor %}
 
 РЕЦЕПТЫ ДЛЯ ПРИГОТОВЛЕНИЯ ({{ recipes|length }} шт.):
-{% for recipe_name, author in recipes %}
-• {{ recipe_name }} (автор: @{{ author }})
+{% for cart_item in recipes %}
+• {{ cart_item.recipe.name }} (автор: @{{ cart_item.recipe.author.username }})
 {% endfor %}

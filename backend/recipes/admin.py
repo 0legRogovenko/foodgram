@@ -48,14 +48,45 @@ class IngredientAdmin(RecipesCountMixin, admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     """Страничка управления рецептами в админке."""
 
-    list_display = ['id', 'name', 'author', 'cooking_time', 'display_image',
-                    'display_products', 'display_tags', 'favorites_count']
+    list_display = [
+        'id', 'display_name', 'display_author', 'display_cooking_time',
+        'display_image', 'display_products', 'display_tags', 'favorites_count'
+    ]
     list_filter = ['author', 'tags', CookingTimeFilter]
     search_fields = ['name', 'author__username', 'tags__name',
                      'ingredients__name']
     ordering = ['name']
-    readonly_fields = ['favorites_count']
+    readonly_fields = ['display_image', 'favorites_count']
     filter_horizontal = ['tags']
+    inlines = []
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'name',
+                    'author',
+                    'text',
+                    'cooking_time',
+                    'tags',
+                    ('image', 'display_image'),
+                    'favorites_count',
+                )
+            },
+        ),
+    )
+
+    @admin.display(description='Название')
+    def display_name(self, recipe):
+        return recipe.name
+
+    @admin.display(description='Автор')
+    def display_author(self, recipe):
+        return recipe.author
+
+    @admin.display(description='Время (мин)')
+    def display_cooking_time(self, recipe):
+        return recipe.cooking_time
 
     @admin.display(description='Картинка')
     def display_image(self, recipe):
@@ -68,18 +99,17 @@ class RecipeAdmin(admin.ModelAdmin):
         return '-'
 
     @admin.display(description='Продукты')
-    def display_products(self, obj):
+    def display_products(self, recipe):
         """Показать список продуктов."""
-        ingredients = RecipeIngredient.objects.select_related(
-            'ingredient'
-        ).filter(recipe=obj)
         return mark_safe(
             '<br>'.join(
                 (
                     f'{item.ingredient.name} '
                     f'({item.amount} {item.ingredient.measurement_unit})'
                 )
-                for item in ingredients
+                for item in recipe.recipe_ingredients.select_related(
+                    'ingredient'
+                ).all()
             )
         )
 
@@ -89,9 +119,18 @@ class RecipeAdmin(admin.ModelAdmin):
         return mark_safe('<br>'.join(tag.name for tag in obj.tags.all()))
 
     @admin.display(description='В избранном')
-    def favorites_count(self, recipes):
+    def favorites_count(self, recipe):
         """Количество добавлений рецепта в избранное."""
-        return Favorite.objects.filter(recipe=recipes).count()
+        return recipe.favorite.count()
+
+
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 1
+    fields = ['ingredient', 'amount']
+
+
+RecipeAdmin.inlines = [RecipeIngredientInline]
 
 
 @admin.register(RecipeIngredient)

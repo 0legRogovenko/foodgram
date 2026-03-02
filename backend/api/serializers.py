@@ -175,9 +175,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = [
-            'tags', 'ingredients',
+            'id', 'tags', 'ingredients',
             'name', 'image', 'text', 'cooking_time'
         ]
+        read_only_fields = ['id']
 
     def _create_ingredients(self, recipe, ingredients_data):
         """Метод для создания ингредиентов рецепта."""
@@ -225,25 +226,27 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('recipe_ingredients')
-        validated_data['author'] = self.context['request'].user
-
-        recipe = super().create(validated_data)
-        recipe.tags.set(tags)
-        self._create_ingredients(recipe, ingredients)
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user,
+            **{
+                key: value
+                for key, value in validated_data.items()
+                if key not in ('tags', 'recipe_ingredients')
+            }
+        )
+        recipe.tags.set(validated_data['tags'])
+        self._create_ingredients(recipe, validated_data['recipe_ingredients'])
 
         return recipe
 
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags', None)
-        ingredient_data = validated_data.pop('recipe_ingredients', None)
-
-        if tags is not None:
-            instance.tags.set(tags)
-
-        if ingredient_data is not None:
+        if 'tags' in validated_data:
+            instance.tags.set(validated_data.pop('tags'))
+        if 'recipe_ingredients' in validated_data:
             instance.recipe_ingredients.all().delete()
-            self._create_ingredients(instance, ingredient_data)
+            self._create_ingredients(
+                instance,
+                validated_data.pop('recipe_ingredients')
+            )
 
         return super().update(instance, validated_data)

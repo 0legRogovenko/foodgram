@@ -27,9 +27,33 @@ class CookingTimeFilter(admin.SimpleListFilter):
         }
 
         return (
-            ('fast', f'Быстрее {fast_threshold} мин'),
-            ('medium', f'{fast_threshold}-{medium_threshold} мин'),
-            ('slow', f'Дольше {medium_threshold} мин'),
+            (
+                'fast',
+                (
+                    f'Быстрее {fast_threshold} мин '
+                    f'({Recipe.objects.filter(
+                        cooking_time__range=self.ranges["fast"]
+                    ).count()})'
+                )
+            ),
+            (
+                'medium',
+                (
+                    f'{fast_threshold}-{medium_threshold} мин '
+                    f'({Recipe.objects.filter(
+                        cooking_time__range=self.ranges["medium"]
+                    ).count()})'
+                )
+            ),
+            (
+                'slow',
+                (
+                    f'Дольше {medium_threshold} мин '
+                    f'({Recipe.objects.filter(
+                        cooking_time__range=self.ranges["slow"]
+                    ).count()})'
+                )
+            ),
         )
 
     def queryset(self, request, recipes):

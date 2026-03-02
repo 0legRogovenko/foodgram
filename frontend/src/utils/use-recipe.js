@@ -43,10 +43,7 @@ export default function useRecipe () {
         setRecipe(recipeUpdated)
       })
       .catch(err => {
-        const { errors } = err
-        if (errors) {
-          alert(errors)
-        }
+        alert(err?.detail || (err?.errors ? err.errors : 'Не удалось обновить подписку'))
       })
   }
 

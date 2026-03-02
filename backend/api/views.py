@@ -1,16 +1,17 @@
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
-                            Subscription, Tag, User)
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
+
+from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
+                            Subscription, Tag, User)
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import LimitPageNumberPagination
@@ -41,7 +42,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    def _toggle_relation(self, request, model_class):
+    def _toggle_relation(self, request, model_class, relation_name):
         user = request.user
         recipe_id = self.kwargs['pk']
 
@@ -58,7 +59,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe_id=recipe_id
         )
         if not created:
-            raise ValidationError({'detail': 'Уже добавлено.'})
+            raise ValidationError(
+                {'detail': f'Рецепт уже добавлен в {relation_name}.'}
+            )
 
         return Response(status=status.HTTP_201_CREATED)
 
@@ -67,6 +70,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self._toggle_relation(
             request,
             Favorite,
+            'избранное',
         )
 
     @action(detail=True, methods=['post', 'delete'])
@@ -74,7 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self._toggle_relation(
             request,
             ShoppingCart,
-
+            'корзину',
         )
 
     @action(
@@ -84,14 +88,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
 
-        response = HttpResponse(
+        return FileResponse(
             format_shopping_list(request.user.shoppingcart.all()),
-            content_type='text/plain; charset=utf-8'
+            as_attachment=True,
+            filename='shopping_list.txt',
+            content_type='text/plain'
         )
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"'
-        )
-        return response
 
     @action(
         detail=True,
@@ -103,15 +105,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response({'short_link': request.build_absolute_uri(
             reverse('short-link', args=[pk])
         )})
-
-    @action(
-        detail=True,
-        methods=['get'],
-        url_path='get-link',
-        url_name='get-link'
-    )
-    def get_link_legacy(self, request, pk=None):
-        return self.get_link(request, pk)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

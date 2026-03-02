@@ -137,9 +137,13 @@ const UserPage = ({ updateOrders }) => {
                     : api.subscribe.bind(api);
                   method({
                     author_id: id,
-                  }).then((_) => {
-                    setSubscribed(!subscribed);
-                  });
+                  })
+                    .then((_) => {
+                      setSubscribed(!subscribed);
+                    })
+                    .catch((err) => {
+                      alert(err?.detail || 'Не удалось обновить подписку')
+                    });
                 }}
               >
                 <Icons.AddUser />{" "}
