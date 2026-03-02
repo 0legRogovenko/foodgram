@@ -31,7 +31,10 @@ def format_shopping_list(cart_items):
 
     products = sorted(ingredients.values(), key=lambda x: x['name'])
 
-    recipes = cart_items.distinct()
+    recipes = cart_items.values_list(
+        'recipe__name',
+        'recipe__author__username'
+    ).distinct()
 
     return render_to_string(
         'shopping_list.txt',

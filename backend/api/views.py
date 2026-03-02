@@ -1,4 +1,4 @@
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -84,12 +84,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
 
-        return FileResponse(
-            format_shopping_list(
-                request.user.shoppingcart.all()), as_attachment=True,
-            filename='shopping_list.txt',
-            content_type='text/plain'
+        response = HttpResponse(
+            format_shopping_list(request.user.shoppingcart.all()),
+            content_type='text/plain; charset=utf-8'
         )
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"'
+        )
+        return response
 
     @action(
         detail=True,
