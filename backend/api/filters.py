@@ -32,7 +32,7 @@ class RecipeFilter(django_filters.FilterSet):
         fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
     def filter_tags(self, recipes, name, value):
-        """Фильтрует рецепты по slug тегов, переданных списком в query params."""
+        """Фильтрует рецепты по slug тегов."""
         tags = self.request.query_params.getlist(name)
         if len(tags) == 1 and ',' in tags[0]:
             tags = [tag for tag in tags[0].split(',') if tag]
