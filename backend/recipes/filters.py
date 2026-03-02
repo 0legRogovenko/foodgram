@@ -25,34 +25,28 @@ class CookingTimeFilter(admin.SimpleListFilter):
             'medium': (fast_threshold, medium_threshold),
             'slow': (medium_threshold, max(times)),
         }
+        fast_count = Recipe.objects.filter(
+            cooking_time__range=self.ranges['fast']
+        ).count()
+        medium_count = Recipe.objects.filter(
+            cooking_time__range=self.ranges['medium']
+        ).count()
+        slow_count = Recipe.objects.filter(
+            cooking_time__range=self.ranges['slow']
+        ).count()
 
         return (
             (
                 'fast',
-                (
-                    f'Быстрее {fast_threshold} мин '
-                    f'({Recipe.objects.filter(
-                        cooking_time__range=self.ranges["fast"]
-                    ).count()})'
-                )
+                f'Быстрее {fast_threshold} мин ({fast_count})'
             ),
             (
                 'medium',
-                (
-                    f'{fast_threshold}-{medium_threshold} мин '
-                    f'({Recipe.objects.filter(
-                        cooking_time__range=self.ranges["medium"]
-                    ).count()})'
-                )
+                f'{fast_threshold}-{medium_threshold} мин ({medium_count})'
             ),
             (
                 'slow',
-                (
-                    f'Дольше {medium_threshold} мин '
-                    f'({Recipe.objects.filter(
-                        cooking_time__range=self.ranges["slow"]
-                    ).count()})'
-                )
+                f'Дольше {medium_threshold} мин ({slow_count})'
             ),
         )
 
