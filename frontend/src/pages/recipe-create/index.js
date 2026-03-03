@@ -185,7 +185,7 @@ const RecipeCreate = ({ onEdit }) => {
           }}
         >
           <Input
-            label="Название рецепта"
+            label="Название"
             onChange={(e) => {
               setSubmitError({ submitError: "" });
               setIngredientError("");
@@ -306,7 +306,7 @@ const RecipeCreate = ({ onEdit }) => {
           </div>
           <div className={styles.cookingTime}>
             <Input
-              label="Время приготовления"
+              label="Время (мин)"
               className={styles.ingredientsTimeInput}
               labelClassName={styles.cookingTimeLabel}
               inputClassName={styles.ingredientsTimeValue}

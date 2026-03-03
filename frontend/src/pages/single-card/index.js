@@ -38,7 +38,11 @@ const SingleCard = ({ loadItem, updateOrders }) => {
     api
       .copyRecipeLink({ id })
       .then((response) => {
-        const shortLink = response.short_link || response.shortLink;
+        const shortLink = (
+          response.short_link
+          || response["short-link"]
+          || response.shortLink
+        );
         if (!shortLink) {
           throw new Error("Не удалось получить короткую ссылку");
         }
