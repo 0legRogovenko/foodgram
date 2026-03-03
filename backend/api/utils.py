@@ -18,10 +18,12 @@ def format_shopping_list(cart_items):
 
     ingredients = {}
     for item in ingredients_data:
+        ingredient_name = item['ingredient_name']
+        ingredient_name = ingredient_name[:1].upper() + ingredient_name[1:]
         key = (item['ingredient_name'], item['measurement_unit'])
         if key not in ingredients:
             ingredients[key] = {
-                'name': item['ingredient_name'],
+                'name': ingredient_name,
                 'amount': item['total_amount'],
                 'unit': item['measurement_unit'],
             }

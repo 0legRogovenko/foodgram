@@ -29,6 +29,7 @@ from .pagination import LimitPageNumberPagination
 from .serializers import (
     IngredientSerializer,
     RecipeReadSerializer,
+    ShortRecipeSerializer,
     RecipeWriteSerializer,
     TagSerializer,
     UsersBaseSerializer,
@@ -70,7 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        relation, created = model_class.objects.get_or_create(
+        _, created = model_class.objects.get_or_create(
             user=user,
             recipe_id=recipe_id
         )
@@ -78,13 +79,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise ValidationError(
                 {
                     'detail': (
-                        f'Рецепт "{relation.recipe.name}" уже добавлен '
+                        'Рецепт {recipe.name} уже добавлен '
                         f'в {model_class._meta.verbose_name}.'
                     )
                 }
             )
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(
+            ShortRecipeSerializer(
+                get_object_or_404(Recipe, pk=recipe_id)
+            ).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk=None):
@@ -159,18 +168,19 @@ class UserViewSet(DjoserUserViewSet):
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, pk=None, id=None):
+        author_id = pk or id
         user = request.user
 
         if request.method == 'DELETE':
             get_object_or_404(
                 Subscription,
                 user=user,
-                author_id=pk
+                author_id=author_id
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        author = self.get_object()
+        author = get_object_or_404(User, pk=author_id)
 
         if user == author:
             raise ValidationError('Нельзя подписаться на себя')

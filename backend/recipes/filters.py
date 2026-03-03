@@ -21,19 +21,18 @@ class CookingTimeFilter(admin.SimpleListFilter):
         medium_threshold = times[2 * len(times) // 3]
 
         self.ranges = {
-            'fast': {'max': fast_threshold},
-            'medium': {'min': fast_threshold, 'max': medium_threshold},
-            'slow': {'min': medium_threshold},
+            'fast': (times[0], fast_threshold),
+            'medium': (fast_threshold + 1, medium_threshold),
+            'slow': (medium_threshold + 1, times[-1]),
         }
         fast_count = Recipe.objects.filter(
-            cooking_time__lte=self.ranges['fast']['max']
+            cooking_time__range=self.ranges['fast']
         ).count()
         medium_count = Recipe.objects.filter(
-            cooking_time__gt=self.ranges['medium']['min'],
-            cooking_time__lte=self.ranges['medium']['max']
+            cooking_time__range=self.ranges['medium']
         ).count()
         slow_count = Recipe.objects.filter(
-            cooking_time__gt=self.ranges['slow']['min']
+            cooking_time__range=self.ranges['slow']
         ).count()
 
         return (
@@ -55,16 +54,7 @@ class CookingTimeFilter(admin.SimpleListFilter):
         if self.value() not in self.ranges:
             return recipes
 
-        if self.value() == 'fast':
-            return recipes.filter(cooking_time__lte=self.ranges['fast']['max'])
-
-        if self.value() == 'medium':
-            return recipes.filter(
-                cooking_time__gt=self.ranges['medium']['min'],
-                cooking_time__lte=self.ranges['medium']['max']
-            )
-
-        return recipes.filter(cooking_time__gt=self.ranges['slow']['min'])
+        return recipes.filter(cooking_time__range=self.ranges[self.value()])
 
 
 class BaseHasRelatedFilter(admin.SimpleListFilter):
@@ -79,14 +69,20 @@ class BaseHasRelatedFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return self.CHOICES_YES_NO
 
-    def queryset(self, request, objects):
-        if not self.value():
-            return objects
-        condition = {
-            f'{self.related_field}__isnull': self.value() == 'no'
-        }
+    def queryset(self, request, recipes):
+        if self.value() not in self.ranges:
+            return recipes
 
-        return objects.filter(**condition).distinct()
+        if self.value() == 'fast':
+            return recipes.filter(cooking_time__lte=self.ranges['fast']['max'])
+
+        if self.value() == 'medium':
+            return recipes.filter(
+                cooking_time__gt=self.ranges['medium']['min'],
+                cooking_time__lte=self.ranges['medium']['max']
+            )
+
+        return recipes.filter(cooking_time__range=self.ranges['slow']['min'])
 
 
 class HasRecipesFilter(BaseHasRelatedFilter):

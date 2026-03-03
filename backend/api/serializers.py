@@ -46,12 +46,12 @@ class UserWithRecipesSerializer(UsersBaseSerializer):
 
     def get_recipes(self, user):
         """Метод для получения рецептов"""
-
-        return user.recipes.all()[:int(self.context.get(
-            'request').query_params.get(
+        recipes_limit = int(self.context.get('request').query_params.get(
             'recipes_limit',
             10 ** 10
-        ))]
+        ))
+        recipes = user.recipes.all()[:recipes_limit]
+        return ShortRecipeSerializer(recipes, many=True).data
 
     class Meta(UsersBaseSerializer.Meta):
         fields = [*UsersBaseSerializer.Meta.fields, 'recipes', 'recipes_count']
@@ -225,9 +225,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        tags = validated_data.pop('tags')
         ingredients_data = validated_data.pop('recipe_ingredients')
-        validated_data['author'] = self.context['request'].user
         recipe = super().create(validated_data)
+        recipe.tags.set(tags)
         self._create_ingredients(recipe, ingredients_data)
 
         return recipe
@@ -241,3 +242,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         )
 
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        return RecipeReadSerializer(
+            instance,
+            context=self.context
+        ).data
