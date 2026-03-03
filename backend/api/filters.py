@@ -19,11 +19,11 @@ class RecipeFilter(django_filters.FilterSet):
         field_name='author__id'
     )
 
-    is_favorited = django_filters.BooleanFilter(
+    is_favorited = django_filters.NumberFilter(
         method='filter_is_favorited'
     )
 
-    is_in_shopping_cart = django_filters.BooleanFilter(
+    is_in_shopping_cart = django_filters.NumberFilter(
         method='filter_is_in_shopping_cart'
     )
 
@@ -44,7 +44,12 @@ class RecipeFilter(django_filters.FilterSet):
         """
         Фильтрует рецепты по добавлению в избранное текущего пользователя.
         """
-        if value:
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return recipes
+
+        if value == 1:
             if self.request.user.is_authenticated:
                 return recipes.filter(
                     id__in=Favorite.objects.filter(
@@ -58,7 +63,12 @@ class RecipeFilter(django_filters.FilterSet):
         """
         Фильтрует рецепты по добавлению в корзину текущего пользователя.
         """
-        if value:
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return recipes
+
+        if value == 1:
             if self.request.user.is_authenticated:
                 return recipes.filter(
                     id__in=ShoppingCart.objects.filter(
