@@ -143,11 +143,11 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор рецепта',
+        verbose_name='Автор',
     )
     name = models.CharField(
         max_length=256,
-        verbose_name='Название рецепта'
+        verbose_name='Название'
     )
     image = models.ImageField(
         upload_to='recipes/',
@@ -159,7 +159,7 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         validators=[
             MinValueValidator(MIN_COOKING_TIME)],
-        verbose_name='Время приготовления (мин)',
+        verbose_name='Время (мин)',
         help_text='Время приготовления в минутах'
     )
     tags = models.ManyToManyField(
