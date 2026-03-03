@@ -60,7 +60,7 @@ class UserWithRecipesSerializer(UsersBaseSerializer):
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для получения аватара пользователя."""
-    avatar = DRFBase64ImageField(required=False)
+    avatar = DRFBase64ImageField(required=True)
 
     class Meta:
         model = User

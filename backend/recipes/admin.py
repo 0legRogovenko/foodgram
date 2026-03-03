@@ -49,7 +49,7 @@ class RecipeAdmin(admin.ModelAdmin):
     """Страничка управления рецептами в админке."""
 
     list_display = [
-        'id', 'recipe_name', 'recipe_author', 'recipe_cooking_time',
+        'id', 'name', 'author', 'cooking_time',
         'display_image', 'display_products', 'display_tags', 'favorites_count'
     ]
     list_filter = ['author', 'tags', CookingTimeFilter]
@@ -75,18 +75,6 @@ class RecipeAdmin(admin.ModelAdmin):
             },
         ),
     )
-
-    @admin.display(description='Название')
-    def recipe_name(self, recipe):
-        return recipe.name
-
-    @admin.display(description='Автор')
-    def recipe_author(self, recipe):
-        return recipe.author
-
-    @admin.display(description='Время (мин)')
-    def recipe_cooking_time(self, recipe):
-        return recipe.cooking_time
 
     @admin.display(description='Картинка')
     def display_image(self, recipe):

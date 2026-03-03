@@ -2,7 +2,7 @@
 
 ПРОДУКТЫ ДЛЯ ПРИГОТОВЛЕНИЯ ({{ products|length }} шт.):
 {% for product in products %}
-{{ forloop.counter }}. {{ product.name }} - {{ product.amount }} {{ product.unit }}
+{{ forloop.counter }}. {{ product.name|capfirst }} - {{ product.amount }} {{ product.unit }}
 {% endfor %}
 
 РЕЦЕПТЫ ДЛЯ ПРИГОТОВЛЕНИЯ ({{ recipes|length }} шт.):

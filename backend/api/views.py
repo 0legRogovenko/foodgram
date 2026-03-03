@@ -27,6 +27,7 @@ from recipes.models import (
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import LimitPageNumberPagination
 from .serializers import (
+    AvatarSerializer,
     IngredientSerializer,
     RecipeReadSerializer,
     ShortRecipeSerializer,
@@ -162,6 +163,28 @@ class UserViewSet(DjoserUserViewSet):
     pagination_class = LimitPageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['username']
+
+    @action(
+        detail=False,
+        methods=['put', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='me/avatar'
+    )
+    def avatar(self, request):
+        if request.method == 'DELETE':
+            request.user.avatar.delete(save=False)
+            request.user.avatar = None
+            request.user.save(update_fields=['avatar'])
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        serializer = AvatarSerializer(
+            request.user,
+            data=request.data,
+            partial=False
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
